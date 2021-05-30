@@ -1,26 +1,26 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { MapLayer, HomePage, LoginPage } from "./pages";
+import { Route, Switch, BrowserRouter, Redirect } from "react-router-dom";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <BrowserRouter>
+        <Switch>
+          <Route
+            path="/"
+            exact={true}
+            component={() => <Redirect to="/home" />}
+          />
+          <Route path="/home" component={HomePage} />
+          <Route path="/login" component={() => <LoginPage />} />
+          <Route path="/application" component={() => <MapLayer />} />
+          <Route path="*" component={() => <Redirect to="/home" />} />
+        </Switch>
+      </BrowserRouter>
+    </>
   );
 }
+
+document.body.style.margin = "0px";
 
 export default App;
