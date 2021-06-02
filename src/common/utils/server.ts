@@ -132,16 +132,16 @@ export const clientUpdateOrder = (changedOrder: any) => {
 export const companyGetPointsPair = async (
   factories: Array<any>,
   productName: string,
-  proId: string
+  prdId: string
 ) => {
   try {
     const coId = JSON.parse(sessionStorage.getItem("userInfo") || "").id;
-    // proId从reducer内获取, 这个方法放到
+    // prdId从reducer内获取, 这个方法放到
     const facilities = factories.map((it) => {
       return {
         potentialId: it.key,
         coId: coId,
-        proId: proId,
+        prdId: prdId,
         longitude: it.longitude,
         latitude: it.latitude,
         capacity: it.quantity,
@@ -163,3 +163,20 @@ export const companyGetPointsPair = async (
     return {};
   }
 };
+
+export const companySaveSnapshot = async (totalMarkers: any, id: any) => {
+  try {
+    await request({
+      method: "post",
+      url: "snapshot",
+      data: {
+        calculateVO: totalMarkers.tempSnapshot,
+        createTime: keyGenerator(),
+        companyId: id,
+        productId: totalMarkers.currentCompanyProduct.proId,
+      },
+    });
+  } catch (e) {
+    return {};
+  }
+}

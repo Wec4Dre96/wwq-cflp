@@ -44,6 +44,8 @@ export interface DisplayMarkers {
   orders: MarkersGroupProps;
   stores: MarkersGroupProps;
   factories: FactoryGroupProps;
+  tempSnapshot?: any;
+  currentCompanyProduct?: any;
 }
 
 export interface SingleHistoryRecord {

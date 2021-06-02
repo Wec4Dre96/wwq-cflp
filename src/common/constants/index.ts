@@ -42,6 +42,11 @@ export const COMPANY_GET_ORDERS = 'companyGetOrders';
 export const INIT_CLIENT_ORDERS = 'initClientOrders';
 
 export const SAVE_TEMP_SNAPSHOT = 'saveTempSnapshot';
+export const SAVE_SNAPSHOT = 'saveSnapshot';
+export const SET_DEMAND_DISPLAY = 'setDemandDisplay';
+
+export const CLEAN_MARKERS = 'cleanMarkers';
+export const SNAPSHOT_ROLLBACK = 'snapshotRollback';
 
 // const res = await axios({
 //   url: "https://qctz2d.fn.thelarkcloud.com/getPaths",

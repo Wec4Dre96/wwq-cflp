@@ -20,6 +20,9 @@ import {
   SAVE_HISTORY,
   companyGetTypeOrders,
   COMPANY_GET_ORDERS,
+  SAVE_SNAPSHOT,
+  CLEAN_MARKERS,
+  SNAPSHOT_ROLLBACK,
 } from "../common";
 import {
   StyledHeader,
@@ -31,6 +34,7 @@ import { historiesReducer, historiesInitialState } from "../store";
 // import { userInfo } from "node:os";
 
 const MapHeader = ({
+  totalMarkers,
   collapsed,
   userInfo,
   factoriesDetail,
@@ -40,6 +44,7 @@ const MapHeader = ({
   handleShowPath,
   markersDispatch,
 }: {
+  totalMarkers: any;
   collapsed: Boolean;
   userInfo: any;
   factoriesDetail: Object;
@@ -54,35 +59,7 @@ const MapHeader = ({
     historiesReducer,
     historiesInitialState
   );
-  const [companySearch, setCompanySearch] = useState('');
-  // TODO: showPath后用来做快照前的缓存, 因为show path在上一层, 这个可能要提到上一层
-  // const [tempDetail, setTempDetail] = useState<Array<any>>([]);
-
-  const handleHistorySave = () => {
-    // TODO: 历史记录区分保存，可能不会提供client的历史记录能力
-    // if (userInfo.userType === CLIENT_TENANT) {
-    //   historyDispatch({
-    //     type: CLIENT_SAVE_HISTORY,
-    //     userType: userInfo.userType,
-    //     detail: ordersDetail,
-    //   });
-    // } else if (userInfo.userType === COMPANY_TENANT)
-    //   historyDispatch({
-    //     type: FACTORIES_SAVE_HISTORY,
-    //     userType: userInfo.userType,
-    //     detail: factoriesDetail,
-    //   });
-    return null;
-  };
-
-  useEffect(() => {
-    // TODO: 如果是client则直接挂载orders（的histories）, 是否需要用户保留历史记录存疑
-    // company需要手动查询产品类型
-    // if (userInfo.userType === CLIENT_TENANT) {
-    //   const temp = getHistories(userInfo.email);
-    //   setTempDetail(temp);
-    // }
-  }, []);
+  const [companySearch, setCompanySearch] = useState("");
 
   return (
     <>
@@ -119,17 +96,20 @@ const MapHeader = ({
             <>
               <Input
                 style={{ marginRight: "6px" }}
-                onChange={e => {
+                onChange={(e) => {
                   const { value } = e.target;
                   setCompanySearch(value);
                 }}
                 onPressEnter={async () => {
                   const res = await companyGetTypeOrders(companySearch);
-                  console.log('res', res);
+                  // console.log("res", res);
                   if (res.status === 200 && res.data.length > 0) {
-                    markersDispatch({ type: COMPANY_GET_ORDERS, data: res.data});
+                    markersDispatch({
+                      type: COMPANY_GET_ORDERS,
+                      data: res.data,
+                    });
                   } else {
-                    message.warning('No such order~');
+                    message.warning("No such order~");
                   }
                 }}
               />
@@ -147,15 +127,28 @@ const MapHeader = ({
                   handleShowPath(true);
                 }}
               >
-                Clear
+                Clear Path
+              </Button>
+              <Button
+                style={{ marginRight: "6px" }}
+                onClick={() => {
+                  markersDispatch({ type: CLEAN_MARKERS });
+                  handleShowPath(true);
+                }}
+              >
+                Clear All
               </Button>
             </>
           ) : null}
           <Button
             onClick={() => {
               console.log("save snapshot");
-              // TODO: historyDispatch({ type: SAVE_HISTORY, userType: userInfo.userType, detail:  });
-              // historyDispatch({ type: SAVE_HISTORY, detail: "test" });
+              // TODO: historyDispatch({ type: SAVE_SNAPSHOT, userType: userInfo.userType, detail:  });
+              historyDispatch({
+                type: SAVE_SNAPSHOT,
+                totalMarkers: totalMarkers,
+                id: userInfo.id,
+              });
             }}
           >
             Snapshot
@@ -175,39 +168,38 @@ const MapHeader = ({
         closable={true}
         onClose={() => setDrawerVisible(false)}
       >
-        {histories.length > 0 ? (
+        {(histories as Array<any>).length > 0 ? (
           <List size="large">
             <div>
               Histories
               <div>(Unsaved changes will be cleared.)</div>
             </div>
             <Divider style={{ marginTop: "5px" }} />
-            <Input
-              onPressEnter={(values) => {
-                console.log("values", values);
-              }}
-              id="factories-search"
-            />
-            {histories.map((item) => (
+            <Input onPressEnter={(values) => {}} id="factories-search" />
+            {(histories as Array<any>).map((item: any) => (
               <div
                 key={item.time}
                 style={{ display: "flex", alignItems: "center" }}
               >
-                <List.Item>
-                  <div>{item.time}</div>
-                  <div>{item?.productName}</div>
+                <List.Item
+                  style={{
+                    flexFlow: "column",
+                    paddingLeft: 0,
+                    paddingRight: 0,
+                  }}
+                >
+                  <div>{new Date(Number(item.time)).toUTCString()} </div>
+                  <div>Type: {item?.productName}</div>
+                  <div>Description: {item?.description}</div>
                 </List.Item>
                 <RollbackOutlined
                   onClick={() => {
                     console.log("rollback history", item);
-                    // TODO: 回滚, 在这重设orders/factories信息, 可能不需要historyRollBack单独设置函数
-                    // TODO: 对于client来说, 默认显示所有自己所有的点，做个保留
-                    // const tempHistories = await historyRollBack(userInfo?.email, item.productName);
-                    // if (userInfo.userType === CLIENT_TENANT) {
-                    //   markersDispatch({ type: CLIENT_ROLLBACK, detail: tempHistories });
-                    // } else {
-                    //   markersDispatch({ type: COMPANY_ROLLBACK, detail: tempHistories });
-                    // }
+                    markersDispatch({
+                      type: SNAPSHOT_ROLLBACK,
+                      detail: item.detail,
+                      productName: item.productName,
+                    });
                   }}
                 />
               </div>

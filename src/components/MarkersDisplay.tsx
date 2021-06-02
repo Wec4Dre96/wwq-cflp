@@ -25,6 +25,9 @@ import {
   getAllClientOrder,
   COMPANY_TENANT,
   INIT_CLIENT_ORDERS,
+  SAVE_TEMP_SNAPSHOT,
+  SET_DEMAND_DISPLAY,
+  companyGetPointsPair,
 } from "../common";
 import {
   DisplayWrapper,
@@ -67,8 +70,8 @@ const MarkersDisplay = ({
   });
   const [currentOperatorType, setCurrentOperatorType] = useState("");
   const [currentItem, setCurrentItem] = useState<any>({});
+  // 另外通过pathVisible判断是否可以保存快照
   const [pathVisible, setPathVisible] = useState(false);
-  // const [userInfo, setUserInfo] = useState<any>({});
 
   // client用户登录时，初始化订单信息
   useEffect(() => {
@@ -215,10 +218,35 @@ const MarkersDisplay = ({
     } else {
       if (!pathVisible) {
         console.log("路径绘制中");
-        await getDetailDirections(totalMarkers).then((res) => {
-          console.log("res", res);
-          setCurrentPaths(res);
+        // 这里将calculate获取到的数据存到tempSnapshot内
+        // 然后将数据存在pathMarkers中
+        // let currentTempSnapshot;
+        const pairPointsRes = await companyGetPointsPair(
+          totalMarkers.factories.detail,
+          totalMarkers.currentCompanyProduct.productName,
+          totalMarkers.currentCompanyProduct.proId
+        );
+        // .then((res) => {
+        //   // markersDispatch({ type: SAVE_TEMP_SNAPSHOT, tempSnapshot: res.data });
+        //   // currentTempSnapshot = res?.data;
+        //   console.log("tempSnapShot", res.data);
+        // });
+        markersDispatch({
+          type: SAVE_TEMP_SNAPSHOT,
+          tempSnapshot: pairPointsRes.data,
         });
+        // 然后将数据转换数组
+        console.log("看看外面的totalMarkers", totalMarkers);
+        setTimeout(async () => {
+          await getDetailDirections(totalMarkers).then((res) => {
+            console.log("res", res);
+            setCurrentPaths(res.pathData);
+            markersDispatch({
+              type: SET_DEMAND_DISPLAY,
+              data: res.pathMarkers,
+            });
+          });
+        }, 0);
         setPathVisible(true);
         console.log("路径绘制完成");
       } else {
@@ -230,6 +258,7 @@ const MarkersDisplay = ({
   return (
     <>
       <MapHeader
+        totalMarkers={totalMarkers}
         factoriesDetail={totalMarkers.factories.detail}
         ordersDetail={totalMarkers.orders.detail}
         collapsed={collapsed}

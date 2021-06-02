@@ -22,6 +22,11 @@ import {
   ORDER_TYPES,
   clientUpdateOrder,
   SAVE_TEMP_SNAPSHOT,
+  companyGetPointsPair,
+  SET_DEMAND_DISPLAY,
+  SAVE_SNAPSHOT,
+  CLEAN_MARKERS,
+  SNAPSHOT_ROLLBACK,
 } from "../common";
 import { clientAddOrder, clientDeleteOrder } from "../common";
 
@@ -30,11 +35,16 @@ export const initialState = {
   orders: { type: ORDER_MARKER, detail: [] as SingleMarkerProps[] },
   stores: { type: STORE_MARKER, detail: [] as SingleMarkerProps[] },
   factories: { type: FACTORY_MARKER, detail: [] as SingleMarkerProps[] },
-  tempSnapShot: {} as any,
-  demandDisplay: { detail: [] },
+  tempSnapshot: {} as any,
+  pathMarkers: {
+    orders: [],
+    factories: [],
+    quantity: [],
+  },
+  demandDisplay: [],
   currentCompanyProduct: {
     productName: "",
-    proId: "",
+    prdId: "",
   },
 };
 
@@ -253,7 +263,7 @@ export const reducer = (state: any, action: any) => {
         },
       };
     case COMPANY_GET_ORDERS:
-      console.log("action.data", action.data);
+      console.log("action.data111", action.data);
       const newCompanyGetOrders = action?.data.map((it: any) => {
         return {
           key: it.key,
@@ -270,8 +280,8 @@ export const reducer = (state: any, action: any) => {
           type: ORDER_MARKER,
           detail: newCompanyGetOrders,
         },
-        currentCompany: {
-          proId: action.data[0].proId,
+        currentCompanyProduct: {
+          prdId: action.data[0].prdId,
           productName: action.data[0].productName,
         },
       };
@@ -296,11 +306,129 @@ export const reducer = (state: any, action: any) => {
         },
       };
     case SAVE_TEMP_SNAPSHOT:
+      // 在里面发请求把calculate结果获取到
+      console.log("看看里面的数据", action);
       return {
         ...state,
-        tempSnapShot: action.data,
+        tempSnapshot: action.tempSnapshot,
+      };
+    case SET_DEMAND_DISPLAY:
+      console.log("看看action", action);
+      return {
+        ...state,
+        demandDisplay: action.data,
+      };
+    case CLEAN_MARKERS:
+      return {
+        position: state.position,
+        orders: { type: ORDER_MARKER, detail: [] as SingleMarkerProps[] },
+        stores: { type: STORE_MARKER, detail: [] as SingleMarkerProps[] },
+        factories: { type: FACTORY_MARKER, detail: [] as SingleMarkerProps[] },
+        tempSnapshot: {} as any,
+        pathMarkers: {
+          orders: [],
+          factories: [],
+          quantity: [],
+        },
+        demandDisplay: [],
+        currentCompanyProduct: {
+          productName: "",
+          prdId: "",
+        },
+      };
+    case SNAPSHOT_ROLLBACK:
+      console.log('看看action', action);
+      const rollbackOrders = action.detail.clients.map((it: any) => {
+        return {
+          key: it.date,
+          type: ORDER_MARKER,
+          latitude: it.latitude,
+          longitude: it.longitude,
+          productName: action.productName,
+          quantity: it.demand,
+        };
+      });
+      const rollbackFactories = action.detail.facilities.map((it: any) => {
+        return {
+          key: it.potentialId,
+          type: FACTORY_MARKER,
+          latitude: it.latitude,
+          longitude: it.longitude,
+          productName: action.productName,
+          quantity: it.capacity,
+          cost: it.fixedCost,
+        };
+      });
+      return {
+        ...state,
+        orders: {
+          type: ORDER_MARKER,
+          detail: rollbackOrders,
+        },
+        factories: {
+          type: FACTORY_MARKER,
+          detail: rollbackFactories
+        },
+        tempSnapshot: {} as any,
+        pathMarkers: {
+          orders: [],
+          factories: [],
+          quantity: [],
+        },
+        demandDisplay: [],
+        currentCompanyProduct: {
+          productName: action.productName,
+          prdId: action.detail.clients[0].prdId,
+        },
       };
     default:
       throw new Error();
   }
 };
+
+// case SAVE_TEMP_SNAPSHOT:
+//   // 在里面发请求把calculate结果获取到
+//   let tempSnapshot = {} as any;
+//   companyGetPointsPair(
+//     state.factories.detail,
+//     state.currentCompanyProduct.productName,
+//     state.currentCompanyProduct.proId
+//   ).then((res) => {
+//     tempSnapshot = res.data;
+//     console.log('tempSnapShot', tempSnapshot);
+//   });
+
+//   // const newPathOrders = tempSnapshot.clients.map((order: any) => {
+//   //   return {
+//   //     key: order.orderId,
+//   //     type: ORDER_MARKER,
+//   //     latitude: order.latitude,
+//   //     longitude: order.longitude,
+//   //     productName: state.currentCompanyProduct.productName,
+//   //     quantity: order.demand,
+//   //   };
+//   // });
+//   // const newPathFactories = tempSnapshot.facilities
+//   //   .filter((it: any) => it.isValid === 1)
+//   //   .map((fac: any) => {
+//   //     return {
+//   //       key: fac.potentialId,
+//   //       type: FACTORY_MARKER,
+//   //       latitude: fac.latitude,
+//   //       longitude: fac.longitude,
+//   //       productName: state.currentCompanyProduct.productName,
+//   //       quantity: fac.capacity,
+//   //       cost: fac.fixedCost,
+//   //     };
+//   //   });
+//     // quantity存储映射
+//   return state;
+//   // {
+//     // ...state,
+//     // tempSnapShot: tempSnapShot,
+//     // pathMarkers: {
+//     //   orders: newPathOrders,
+//     //   factories: newPathFactories,
+//     //   quantity: tempSnapShot.quantity,
+//     // },
+//   // };
