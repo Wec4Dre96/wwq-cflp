@@ -4,7 +4,9 @@
     "lib": [
       "dom",
       "dom.iterable",
-      "esnext"
+      "esnext",
+      "es5",
+      "es6"
     ],
     "allowJs": true,
     "skipLibCheck": true,
@@ -21,6 +23,14 @@
     "jsx": "react-jsx"
   },
   "include": [
-    "src"
+    "src",
+    "src/assets",
+    "src/common",
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build/",
+    ".vscode"
   ]
 }

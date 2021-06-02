@@ -1,0 +1,4 @@
+{
+  "editor.minimap.maxColumn": 80,
+  "typescript.tsdk": "node_modules/typescript/lib"
+}
